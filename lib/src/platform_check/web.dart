@@ -1,11 +1,10 @@
-@JS()
+import 'dart:js_interop';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:js/js.dart';
 import 'package:pointycastle/src/impl/entropy.dart';
 
-import 'node_crypto.dart';
+import 'web_crypto.dart';
 import 'platform_check.dart';
 
 class PlatformWeb extends Platform {
@@ -36,7 +35,7 @@ class PlatformWeb extends Platform {
       // Assume that if we cannot get a built in Secure RNG then we are
       // probably on NodeJS.
       //
-      return _JsNodeEntropySource();
+      return _JsEntropySource();
     }
   }
 }
@@ -53,13 +52,12 @@ class _JsBuiltInEntropySource implements EntropySource {
 }
 
 ///
-class _JsNodeEntropySource implements EntropySource {
+class _JsEntropySource implements EntropySource {
   @override
   Uint8List getBytes(int len) {
-    final j = require('crypto') as NodeCrypto;
-    var list = Uint8List(len);
-    j.randomFillSync(list);
-    return list;
+    var list = Uint8List(len).toJS;
+    window.crypto.getRandomValues(list);
+    return list.toDart;
   }
 }
 
